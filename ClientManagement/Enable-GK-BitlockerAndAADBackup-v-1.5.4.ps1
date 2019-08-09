@@ -355,7 +355,7 @@
 
     $PreDur = -join ([math]::Ceiling($PreStepsDuration.TotalMinutes), " Minutes")
     $ProcDur = -join ([math]::Ceiling($ProcessDuration.TotalMinutes), " Minutes")
-    $ScriptDur = [math]::Ceiling($PreStepsDuration.TotalMinutes) + [math]::Ceiling($ProcessDuration.TotalMinutes)
+    $ScriptDur = -join ([math]::Ceiling($PreStepsDuration.TotalMinutes) + [math]::Ceiling($ProcessDuration.TotalMinutes), " Minutes")
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     # print ScriptDuration
