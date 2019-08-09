@@ -1,2 +1,2 @@
 # PoSh
-# Some PowerShell scripts
+## Some PowerShell scripts
