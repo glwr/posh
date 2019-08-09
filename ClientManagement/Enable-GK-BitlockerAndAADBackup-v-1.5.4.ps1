@@ -214,7 +214,7 @@
 #endregion
 #############################################################################################
 #region process area
-    Write-TimeHost "Process Area" -ForegroundColor DarkCyan
+    Write-TimeHost "Process Area"
     Write-Host "#############################################################################################"
 
     $StartProcessDate = Get-Date
@@ -236,7 +236,7 @@
             #  Let's dump the starting point
             # --------------------------------------------------------------------------
             Write-Host "--------------------------------------------------------------------------------------"
-            Write-TimeHost " STARTING POINT:  Get-BitLockerVolume " + $OSDrive
+            Write-TimeHost " STARTING POINT:  Get-BitLockerVolume  $OSDrive"
             Write-Host "--------------------------------------------------------------------------------------"
             $bdeStartingStatus = Get-BitLockerVolume $OSDrive 
         
@@ -344,7 +344,7 @@
 #endregion
 #############################################################################################
 #region final area
-    Write-TimeHost "Final Area" -ForegroundColor DarkCyan
+    Write-TimeHost "Final Area"
     Write-Host "#############################################################################################"
 
     # calculate ScriptDuration
@@ -359,9 +359,9 @@
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     # print ScriptDuration
-    Write-TimeHost "Duration of Presteps: $PreDur" -ForegroundColor DarkCyan
-    Write-TimeHost "Duration of Processing: $ProcDur" -ForegroundColor DarkCyan
-    Write-TimeHost "Duration of overall Program: $ScriptDur" -ForegroundColor DarkCyan
+    Write-TimeHost "Duration of Presteps: $PreDur"
+    Write-TimeHost "Duration of Processing: $ProcDur"
+    Write-TimeHost "Duration of overall Program: $ScriptDur"
     Write-TimeDebug "Execute 'Invoke-ClosingTasks'..."
     
     Invoke-ClosingTasks -Reason finished
