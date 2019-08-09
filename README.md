@@ -1,1 +1,2 @@
-# posh
+# PoSh
+# Some PowerShell scripts
