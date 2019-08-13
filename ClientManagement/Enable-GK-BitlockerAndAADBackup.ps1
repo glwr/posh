@@ -18,7 +18,7 @@
 #region ProgramInfo
 
 [string]$Script:ProgramName = "Enable-GK-BitlockerAndAADBackup"
-[Version]$Script:ProgramVersion = "1.5.4"
+[Version]$Script:ProgramVersion = "1.5.5"
 [boolean]$Debug = $false
 [boolean]$Verbose = $false
 [boolean]$Warning = $false
@@ -321,7 +321,7 @@
             }
         
             #In case we had to encrypt, turn it on for any enabled volume
-            Get-BitLockerVolume | Resume-BitLocker
+            Resume-BitLocker -MountPoint $OSDrive
         
             # --------------------------------------------------------------------------
             #  Finish - Let's dump the ending point
@@ -355,13 +355,11 @@
 
     $PreDur = -join ([math]::Ceiling($PreStepsDuration.TotalMinutes), " Minutes")
     $ProcDur = -join ([math]::Ceiling($ProcessDuration.TotalMinutes), " Minutes")
-    $ScriptDur = -join ([math]::Ceiling($PreStepsDuration.TotalMinutes) + [math]::Ceiling($ProcessDuration.TotalMinutes), " Minutes")
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     # print ScriptDuration
     Write-TimeHost "Duration of Presteps: $PreDur"
     Write-TimeHost "Duration of Processing: $ProcDur"
-    Write-TimeHost "Duration of overall Program: $ScriptDur"
     Write-TimeDebug "Execute 'Invoke-ClosingTasks'..."
     
     Invoke-ClosingTasks -Reason finished
