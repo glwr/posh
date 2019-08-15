@@ -239,9 +239,9 @@
             # --------------------------------------------------------------------------
             Write-Host "--------------------------------------------------------------------------------------"
             Write-TimeHost " STARTING POINT:  Get-BitLockerVolume  $OSDrive"
+            Get-BitLockerVolume $OSDrive 
             Write-Host "--------------------------------------------------------------------------------------"
-            $bdeStartingStatus = Get-BitLockerVolume $OSDrive 
-        
+            
             #  Evaluate the Volume Status to see what we need to do...
             $bdeProtect = Get-BitLockerVolume $OSDrive | Select-Object -Property VolumeStatus, KeyProtector, EncryptionMethod
 
@@ -256,6 +256,8 @@
                 {
                         Write-TimeHost "start decryption..."
                         Disable-BitLocker -MountPoint $OSDrive
+                        Start-Sleep -Seconds 5
+                        Write-TimeDebug (Get-BitLockerVolume $OSDrive)
                 }
                 Write-Host "--------------------------------------------------------------------------------------"
             }
@@ -306,7 +308,7 @@
                 Write-Host "--------------------------------------------------------------------------------------"
                 # Enable Bitlocker using TPM
                 Enable-BitLocker -MountPoint $OSDrive -EncryptionMethod $EncryptionMethod -TpmProtector -SkipHardwareTest -UsedSpaceOnly -ErrorAction Continue
-                Enable-BitLocker -MountPoint $OSDrive -EncryptionMethod $EncryptionMethod -RecoveryPasswordProtector -SkipHardwareTest
+                Enable-BitLocker -MountPoint $OSDrive -EncryptionMethod $EncryptionMethod -RecoveryPasswordProtector -SkipHardwareTest -UsedSpaceOnly
             }  
             elseif(($bdeProtect.VolumeStatus -eq "FullyEncrypted") -or ($bdeProtect.VolumeStatus -eq "UsedSpaceOnly")) 
             {
