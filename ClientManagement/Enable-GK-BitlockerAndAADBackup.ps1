@@ -18,7 +18,7 @@
 #region ProgramInfo
 
 [string]$Script:ProgramName = "Enable-GK-BitlockerAndAADBackup"
-[Version]$Script:ProgramVersion = "1.5.5"
+[Version]$Script:ProgramVersion = "1.5.6"
 [boolean]$Debug = $false
 [boolean]$Verbose = $false
 [boolean]$Warning = $false
@@ -206,6 +206,8 @@
         # if you have some variables, declare them in this region
         [string]$OSDrive = "C:"
         [string]$EncryptionMethod = "XtsAes256" # 	supported Aes128, Aes256, XtsAes128, XtsAes256
+        [boolean]$RemoveOldEncryption = $true
+        [string]$OldEncryptionMethod  = "*128*" # with this you can disable all 128 bit encryption methods or you can specify a dedicated one
         
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12        
     #endregion
@@ -243,17 +245,58 @@
             #  Evaluate the Volume Status to see what we need to do...
             $bdeProtect = Get-BitLockerVolume $OSDrive | Select-Object -Property VolumeStatus, KeyProtector, EncryptionMethod
 
-            # Check for 128 Bit encryption and disable it
-            Write-Host "--------------------------------------------------------------------------------------"
-            Write-TimeHost " Check if 128 Bit encryption is enabled. If yes, disable it."
-            if(($bdeProtect.VolumeStatus -eq "FullyEncrypted") -or ($bdeProtect.VolumeStatus -eq "UsedSpaceOnly"))
+            if($RemoveOldEncryption -eq $true)
             {
-                if($bdeProtect.EncryptionMethod -like "*128*"){
-                    Write-TimeHost " 128 Bit encryption enabled. Disable it."
-                    Disable-BitLocker -MountPoint $OSDrive
+                Write-Host "--------------------------------------------------------------------------------------"
+                Write-TimeHost " Removing old encryption method is equals $RemoveOldEncryption"
+                Write-Host "--------------------------------------------------------------------------------------"
+                # Check for 128 Bit encryption and disable it
+                Write-TimeHost " Check if $OldEncryptionMethod encryption is enabled and start decryption..."
+                if((($bdeProtect.VolumeStatus -eq "FullyEncrypted") -or ($bdeProtect.VolumeStatus -eq "UsedSpaceOnly")) -and ($bdeProtect.EncryptionMethod -like $OldEncryptionMethod))
+                {
+                        Write-TimeHost "start decryption..."
+                        Disable-BitLocker -MountPoint $OSDrive
                 }
+                Write-Host "--------------------------------------------------------------------------------------"
             }
-            Write-Host "--------------------------------------------------------------------------------------"
+            else
+            {
+                Write-Host "--------------------------------------------------------------------------------------"
+                Write-TimeHost " Removing old encryption method is equals $RemoveOldEncryption, decryption not required."
+                Write-Host "--------------------------------------------------------------------------------------"
+                
+            }
+
+            #  Evaluate the Volume Status to see what we need to do...
+            $bdeProtect = Get-BitLockerVolume $OSDrive | Select-Object -Property VolumeStatus, KeyProtector, EncryptionMethod
+
+            if($bdeProtect.VolumeStatus -eq "DecryptionInProgress")
+            {
+                Write-Host "--------------------------------------------------------------------------------------"
+                Write-TimeHost " Volume decryption is in progress, waiting till decryption finished..."
+                Write-Host "--------------------------------------------------------------------------------------"
+                do
+                {
+                    Start-Sleep -Seconds 10
+                    Get-BitLockerVolume -MountPoint $OSDrive
+                    $BitlockerDecryptionStatus = Get-BitLockerVolume $OSDrive | Select-Object -Property VolumeStatus, EncryptionMethod, EncryptionPercentage
+                }
+                until($BitlockerDecryptionStatus.VolumeStatus -ne "DecryptionInProgress")
+                Write-Host "--------------------------------------------------------------------------------------"
+                Write-TimeHost " Volume decryption finished. Proceed with next steps."
+                Write-Host "--------------------------------------------------------------------------------------"
+                
+            }
+            else
+            {
+                Write-Host "--------------------------------------------------------------------------------------"
+                Write-TimeHost " No decryption is in progress, go to Encryption steps."
+                Write-Host "--------------------------------------------------------------------------------------"
+                
+            }
+
+            #  Evaluate the Volume Status to see what we need to do...
+            $bdeProtect = Get-BitLockerVolume $OSDrive | Select-Object -Property VolumeStatus, KeyProtector, EncryptionMethod
 
             # Account for an uncrypted drive 
             if (($bdeProtect.VolumeStatus -eq "FullyDecrypted") -or ($bdeProtect.KeyProtector.Count -lt 1)) 
@@ -315,7 +358,7 @@
                 Write-TimeHost "                     https://enterpriseregistration.windows.net/manage/$tenant/device/$($id)?api-version=1.0"
                 Write-Host "--------------------------------------------------------------------------------------"
                 # Get the BitLocker key information from WMI
-                (Get-BitLockerVolume -MountPoint $OSDrive).KeyProtector|?{$_.KeyProtectorType -eq 'RecoveryPassword'} | %{
+                (Get-BitLockerVolume -MountPoint $OSDrive).KeyProtector|Where-Object{$_.KeyProtectorType -eq 'RecoveryPassword'} | ForEach-Object{
                     $key = $_
                     write-verbose "kid : $($key.KeyProtectorId) key: $($key.RecoveryPassword)"
                     $body = "{""key"":""$($key.RecoveryPassword)"",""kid"":""$($key.KeyProtectorId.replace('{','').Replace('}',''))"",""vol"":""OSV""}"
