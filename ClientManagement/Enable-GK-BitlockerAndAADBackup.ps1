@@ -241,7 +241,20 @@
             $bdeStartingStatus = Get-BitLockerVolume $OSDrive 
         
             #  Evaluate the Volume Status to see what we need to do...
-            $bdeProtect = Get-BitLockerVolume $OSDrive | Select-Object -Property VolumeStatus, KeyProtector
+            $bdeProtect = Get-BitLockerVolume $OSDrive | Select-Object -Property VolumeStatus, KeyProtector, EncryptionMethod
+
+            # Check for 128 Bit encryption and disable it
+            Write-Host "--------------------------------------------------------------------------------------"
+            Write-TimeHost " Check if 128 Bit encryption is enabled. If yes, disable it."
+            if(($bdeProtect.VolumeStatus -eq "FullyEncrypted") -or ($bdeProtect.VolumeStatus -eq "UsedSpaceOnly"))
+            {
+                if($bdeProtect.EncryptionMethod -like "*128*"){
+                    Write-TimeHost " 128 Bit encryption enabled. Disable it."
+                    Disable-BitLocker -MountPoint $OSDrive
+                }
+            }
+            Write-Host "--------------------------------------------------------------------------------------"
+
             # Account for an uncrypted drive 
             if (($bdeProtect.VolumeStatus -eq "FullyDecrypted") -or ($bdeProtect.KeyProtector.Count -lt 1)) 
             {
