@@ -18,7 +18,7 @@
 #region ProgramInfo
 
 [string]$Script:ProgramName = "Enable-GK-BitlockerAndAADBackup"
-[Version]$Script:ProgramVersion = "1.5.6"
+[Version]$Script:ProgramVersion = "1.5.7"
 [boolean]$Debug = $false
 [boolean]$Verbose = $false
 [boolean]$Warning = $false
@@ -184,15 +184,14 @@
             {
                 Write-TimeDebug "Execution finisehd. Closing Program..."
                 Write-TimeHost "Execution finisehd. Closing Program..." -ForegroundColor Green
+                Exit 0
             }
             elseif($Reason -eq "error")
             {
                 Write-TimeDebug "Execution run on errors and will be closed..."
                 Write-TimeHost "Execution run on errors and will be closed..." -ForegroundColor Red
-            }
-
-            # Exit
-            Exit
+                Exit 1
+            }            
         } 
 
     #endregion
@@ -208,7 +207,8 @@
         [string]$EncryptionMethod = "XtsAes256" # 	supported Aes128, Aes256, XtsAes128, XtsAes256
         [boolean]$RemoveOldEncryption = $true
         [string]$OldEncryptionMethod  = "*128*" # with this you can disable all 128 bit encryption methods or you can specify a dedicated one
-        
+        [boolean]$CheckTPM = $true
+
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12        
     #endregion
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -244,6 +244,20 @@
             
             #  Evaluate the Volume Status to see what we need to do...
             $bdeProtect = Get-BitLockerVolume $OSDrive | Select-Object -Property VolumeStatus, KeyProtector, EncryptionMethod
+
+            # Check if TPM is available
+            if($CheckTPM -eq $true)
+            {
+                $TPMState = Get-TPM
+                if($TPMState.TpmPresent -eq $false)
+                {
+                    
+                    Write-Error "Error, no TPM Chip found!" 
+                    Write-TimeHost "TPM State:"
+                    $TPMState
+                    Invoke-ClosingTasks -Reason error
+                }
+            }
 
             if($RemoveOldEncryption -eq $true)
             {
