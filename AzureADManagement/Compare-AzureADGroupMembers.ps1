@@ -195,16 +195,183 @@
             Exit
         } 
 
+        function Draw-Menu {
+            [CmdletBinding()]
+            param (
+                [Parameter(Mandatory=$true)]
+                [pscustomobject]$menuState
+            )
+            
+            begin {
+            }
+            
+            process {
+                if ($menuState.Items.count -eq 0){
+                    return
+                }
+        
+                # start draw
+                [System.Console]::CursorTop = $menuState.CursorTop
+                [System.Console]::CursorLeft = 0 # start on the left
+        
+                Write-Verbose ([System.Console]::CursorTop)
+                
+                $row = 1
+                $column = 1
+                $index = 0
+                foreach ($item in $menuState.Items){
+                    if ($index -eq $menuState.Selected){
+                        Write-Host -NoNewline (
+                            $item.PadRight($menuState.ColumnWidth)
+                        )
+                    } else {
+                        Write-Host -NoNewline (
+                            $item.PadRight($menuState.ColumnWidth)
+                        )
+                    }
+                    $column++
+                    $index++
+                    if ($column -gt $menuState.Columns){
+                        $row++
+                        $column = 1
+                        Write-Host ''
+                    }
+                }
+        
+                Write-Verbose ([System.Console]::CursorTop)
+                
+            }
+            
+            end {
+            }
+        }
+        function Update-MenuStateByKey {
+            [CmdletBinding()]
+            param (
+                [pscustomobject]$MenuState,
+                [System.ConsoleKey]$Key
+            )
+            
+            begin {
+                
+            }
+            
+            process {
+                Write-Verbose $Key
+                switch ($Key){
+                    ([System.ConsoleKey]::RightArrow) {
+                        $MenuState.Selected = $MenuState.Selected + 1
+                    }
+                    ([System.ConsoleKey]::LeftArrow) {
+                        $MenuState.Selected = $MenuState.Selected - 1
+                    }
+                    ([System.ConsoleKey]::UpArrow) {
+                        $MenuState.Selected = $MenuState.Selected - $MenuState.Columns
+                    }
+                    ([System.ConsoleKey]::DownArrow) {
+                        $MenuState.Selected = $MenuState.Selected + $MenuState.Columns
+                    }
+                }
+        
+                # now do some bad value correcting
+                if ($MenuState.Selected -gt ($MenuState.Items.Count -1 )){
+                    $MenuState.Selected = $MenuState.Items.Count -1 #count is 1 indexed
+                }
+                if ($MenuState.Selected -lt 0){
+                    $MenuState.Selected = 0
+                }
+            }
+            
+            end {
+                return $MenuState
+            }
+        }
+
+        function Show-ChoiceConsoleMenu {
+            [CmdletBinding()]
+            param (
+                [String[]]$ItemList
+            )
+            
+            begin {
+                # create a state object with defaults
+                $MenuState = New-Object pscustomobject -Property @{
+                    CursorTop   = [System.Console]::CursorTop
+                    Selected    = 0
+                    Columns     = 1
+                    ColumnWidth = [System.Console]::BufferWidth # default
+                    Items       = $ItemList
+                    Rows        = 0 #never used but might be nice to have
+                }
+        
+                # calculate display grid.
+                $ItemMaxLength = 0
+                foreach ( $Item in $ItemList){
+                    $ItemMaxLength = [math]::Max($Item.length,$ItemMaxLength)
+                }
+                $ItemMaxLength++ # create a single char buffer between columns
+        
+                if ($ItemMaxLength -lt [System.Console]::BufferWidth){
+                    $MenuState.ColumnWidth = $ItemMaxLength
+                }
+                $MenuState.Columns = [int]([Math]::Max( 
+                    [Math]::Floor( ( [System.Console]::BufferWidth / $ItemMaxLength ) )
+                    , 1 ) )
+                $MenuState.Rows = [int][Math]::Ceiling( ($ItemList.Count / $MenuState.Columns) )
+        
+                if ( [System.Console]::CursorTop + $MenuState.Rows -ge [System.Console]::BufferHeight ) {
+                    if ((Read-Host "No enough buffer to show menu, clear screen? (Y/n)") -match '[nN][oO]?'){
+                        Write-Warning "Console Buffer full, menu will act funny."
+                    } else {
+                        Clear-Host
+                    }
+                    $MenuState.Cursortop = [System.Console]::CursorTop
+                }
+        
+            }
+            
+            process {
+        
+                # main iteraction loop
+                [System.console]::CursorVisible=$false
+                do {
+                    Draw-Menu $MenuState
+                    Write-Verbose $MenuState.Selected
+                    $CursorBottom = [System.Console]::CursorTop
+                    $MenuKey = [System.Console]::ReadKey($true)
+                    $MenuState = Update-MenuStateByKey -MenuState $MenuState -Key $MenuKey.Key
+                } while ($MenuKey.Key -ne [System.ConsoleKey]::Enter -and $MenuKey.Key -ne [System.ConsoleKey]::Escape)
+                
+        
+                # clear menu
+                $RowsToClear = $CursorBottom - $MenuState.CursorTop +1
+                [System.Console]::CursorTop = $MenuState.CursorTop
+                [System.Console]::CursorLeft = 0
+                for ($ClearRow=0;$ClearRow -lt $RowsToClear;$ClearRow++){
+                    Write-Host (''.PadRight( [System.Console]::BufferWidth, [char]160 ) ) #nbsp
+                }
+                # move cursor back to top, to stop big gap
+                [System.Console]::CursorTop = $MenuState.CursorTop
+                [System.console]::CursorVisible=$true
+            }
+            
+            end {
+                if ($MenuKey.Key -eq [System.ConsoleKey]::Enter) {
+                    return $ItemList[$MenuState.Selected]
+                }
+            }
+        }
+
     #endregion
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     #region script blocks
         # if you have some script blocks, declare them in this region
-
     #endregion
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     #region variables
         # An comma separated list of Profile Groups
-        [array]$ProfileGroupList = "sg_IntuneProfile.Aussendienst"
+        [array]$ProfileGroupList = "sg_IntuneProfile.Aussendienst","new_Group","next_Group"
+        [boolean]$SyncUsers = $true
     #endregion
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -244,8 +411,16 @@
         Connect-AzureAD
 
         # Prompt for Azure AD Group
-        $ProfileGroup = $ProfileGroupList | Out-GridView -OutputMode Single -Title "Choose a Profile Group: "
-        
+        if($IsWindows -eq $true)
+        {
+            $ProfileGroup = $ProfileGroupList | Out-GridView -OutputMode Single -Title "Choose a Profile Group: "
+        }
+        elseif($IsWindows -eq $false)
+        {
+            Write-TimeHost "Please select one of this Groups, use your arrow keys to select."
+            Write-TimeHost "To choose the first entry, press enter, to selecet the secound press arrrow key right and then enter, and so on..."
+            $ProfileGroup  = Show-ChoiceConsoleMenu -ItemList $ProfileGroupList
+        }
 
         # check if Group is available
         $AADGroupObject = Get-AzureADGroup -SearchString $ProfileGroup -All:$true
@@ -275,6 +450,8 @@
         Write-TimeHost "List of Users in Profile " -ForegroundColor Cyan -NoNewline
         Write-Host  $($AADGroupObject.DisplayName) -ForegroundColor Green
         $ProfileGroupMemberUsers | Select-Object UserPrincipalName
+        Write-TimeHost "User Sync is set to " -ForegroundColor Cyan -NoNewline
+        Write-Host  $($SyncUsers) -ForegroundColor Green
 
         Write-Host "########################################################################################"
         Write-TimeHost "CompareGroups and Add missing users" -ForegroundColor Cyan
@@ -290,9 +467,12 @@
             Compare-Object -ReferenceObject $GroupMembers -DifferenceObject $ProfileGroupMemberUsers -Property "UserPrincipalName" | Where-Object {$_.SideIndicator -eq "=>"} | Format-Table
             Write-Host "-----------------------------------------------------------------------------------------"
         
-            foreach($MissingUser in $ComparedObjects)
+            if($SyncUsers -eq $true)
             {
-                Add-AzureADGroupMember -ObjectId $Group.ObjectId -RefObjectId $MissingUser.ObjectId
+                foreach($MissingUser in $ComparedObjects)
+                {
+                    Add-AzureADGroupMember -ObjectId $Group.ObjectId -RefObjectId $MissingUser.ObjectId
+                }
             }
         }
 
