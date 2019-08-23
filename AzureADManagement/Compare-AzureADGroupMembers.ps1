@@ -370,7 +370,7 @@
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     #region variables
         # An comma separated list of Profile Groups
-        [array]$ProfileGroupList = "sg_IntuneProfile.Aussendienst","new_Group","next_Group"
+        [array]$ProfileGroupList = "sg_IntuneProfile.Aussendienst"
         [boolean]$SyncUsers = $true
     #endregion
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
