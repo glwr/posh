@@ -390,6 +390,19 @@
         # set execution policy for this process
         Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process -Force
 
+        ## Check PS Version
+ 
+        if($PSVersionTable.PSVersion -lt "6.0.0")
+        {
+                Write-TimeHost "PS Version lower than 6, set `$IsWindows to `$true."
+                $IsWindows = $true
+        }
+        elseif ($PSVersionTable.PSVersion -lt "5.0.0") 
+        {
+                Write-TimeHost "PS Version is lower than 5, we will exit the execution. Please Update Windows PowerShell!"
+                Invoke-ClosingTasks -Reason error
+        }
+
         # Install the AzureAD Module for current user
         if($IsWindows -eq $false)
         {
