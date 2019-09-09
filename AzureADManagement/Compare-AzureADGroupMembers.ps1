@@ -387,6 +387,11 @@
 
     try
     {
+
+        ConvertTo-SecureString -String "AMIGWGB22UYE252XOZIHLXK5OYPUW" -AsPlainText -Force
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/glwr/poshprivate/master/Modules/GRE-PoSh-Basic.ps1?token=AMIGWGB22UYE252XOZIHLXK5OYPUW"
+        Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/poshprivate/master/Modules/GRE-PoSh-Basic.ps1" -Method Get -FollowRelLink -Token (ConvertTo-SecureString -String "AMIGWGB22UYE252XOZIHLXK5OYPUW" -AsPlainText -Force)
+
         # set execution policy for this process
         Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process -Force
 
