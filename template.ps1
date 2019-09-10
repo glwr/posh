@@ -84,6 +84,15 @@
 
             #># SYNOPSIS
 
+            $CheckIfOnline =
+            {
+                $WebResponse = Invoke-WebRequest -Method Get -Uri "https://raw.githubusercontent.com"
+                if($WebResponse.StatusCode -eq 200)
+                {
+                    return $true
+                }
+            }
+
             if(($PSVersionTable.PSVersion -lt "6.0.0") -and ($PSVersionTable.PSVersion -ge "5.0.0"))
             {
                     Write-Host "PS Version lower than 6, set `$IsWindows to `$true."
@@ -94,43 +103,23 @@
                     Write-Host "PS Version is lower than 5, we will exit the execution. Please Update Windows PowerShell!"
                     Exit 1
             }
-            else
-            {
-                    Write-Host "Something wrong with PS Version, we will exit the execution."
-                    Exit 1
-            }
 
             if($IsMacOS -eq $true)
             {  
-                Write-Host "MacOS detected, check GRE PoSh Basic offline availability..."
+                Write-Host "MacOS detected"
                 $PoShModulePath = "$env:HOME/.local/share/powershell/Modules"
-                if((Test-Path "$PoShModulePath/GRE-PoSh/GRE-PoSh-Basic.ps1") -eq $true)
-                {
-                    Import-Module "$PoShModulePath/GRE-PoSh/GRE-PoSh-Basic.ps1"
-                }
-                else 
-                {
-                    $PoShNotOffline = $true
-                    Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/GRE-PoSh-Basic.ps1" -OutFile "$PoShModulePath/GRE-PoSh/GRE-PoSh-Basic.ps1"
-                }
+                $GREPoSHBasicPath = "$PoShModulePath/GRE-PoSh/"
             }
             elseif ($IsLinux -eq $true)
             {
-                Write-Host "Linix not supported/tested. Maybe something will not work. No offline Module support."
+                Write-Host "Linix not supported/tested. We will exit."
+                Exit 1
             } 
             elseif($IsWindows -eq $true)
             {
-                Write-Host "Windows detected, check GRE PoSh Basic offline availability..."
+                Write-Host "Windows detected"
                $PoShModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules"
-               if((Test-Path "$PoShModulePath\GRE-PoSh\GRE-PoSh-Basic.ps1") -eq $true)
-               {
-                    Import-Module "$PoShModulePath\GRE-PoSh\GRE-PoSh-Basic.ps1"
-               }
-               else 
-               {
-                    $PoShNotOffline = $true
-                    Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/GRE-PoSh-Basic.ps1" -OutFile "$PoShModulePath\GRE-PoSh\GRE-PoSh-Basic.ps1"
-               }
+               $GREPoSHBasicPath = "$PoShModulePath\GRE-PoSh-Basic\"
             }
             else 
             {
@@ -138,18 +127,22 @@
                 Exit 1
             }
 
-            try 
+            if((Invoke-Command -ScriptBlock $CheckIfOnline) -eq $true)
             {
-                $GRE_PoSh_Basic = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/GRE-PoSh-Basic.ps1"
-                Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/GRE-PoSh-Basic.ps1" -OutFile 
-                Invoke-Expression -Command $GRE_PoSh_Basic
-
+                Write-Host "We are online, download GRE PoSh Basic ps1..."
+                New-Item -Path $GREPoSHBasicPath -ItemType Directory -Force
+                Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/GRE-PoSh-Basic/GRE-PoSh-Basic.psd1" -OutFile (-join ($GREPoSHBasicPath, "GRE-PoSh-Basic.psd1"))
+                Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/GRE-PoSh-Basic/GRE-PoSh-Basic.psm1" -OutFile (-join ($GREPoSHBasicPath, "GRE-PoSh-Basic.psm1"))
             }
-            catch
+
+            if((Get-Module GRE-PoSh-Basic -ListAvailable))
             {
-                Write-Error -Message "Error during load GRE Basics from Github with following message: $($_.ErrorDetails.Message)"
-                Write-Debug  "Full exeption: "
-                Write-Debug  $Error[1].Exception
+                Write-Host "Import GRE PoSh Basic..."
+                Import-Module GRE-PoSh-Basic
+            }
+            else
+            {
+                Write-Error -Message "Error during load GRE Basics- Module not available."
                 Exit 1
             }
        }
