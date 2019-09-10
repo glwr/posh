@@ -86,10 +86,16 @@
 
             $CheckIfOnline =
             {
+                $ErrorActionPreference = "SilentlyContinue"
                 $WebResponse = Invoke-WebRequest -Method Get -Uri "https://raw.githubusercontent.com"
+                $ErrorActionPreference = "Continue"
                 if($WebResponse.StatusCode -eq 200)
                 {
                     return $true
+                }
+                else 
+                {
+                    return $false   
                 }
             }
 
@@ -108,7 +114,7 @@
             {  
                 Write-Host "MacOS detected"
                 $PoShModulePath = "$env:HOME/.local/share/powershell/Modules"
-                $GREPoSHBasicPath = "$PoShModulePath/GRE-PoSh/"
+                $GREPoSHBasicPath = "$PoShModulePath/GRE-PoSh-Basic/"
             }
             elseif ($IsLinux -eq $true)
             {
@@ -130,9 +136,13 @@
             if((Invoke-Command -ScriptBlock $CheckIfOnline) -eq $true)
             {
                 Write-Host "We are online, download GRE PoSh Basic ps1..."
-                New-Item -Path $GREPoSHBasicPath -ItemType Directory -Force
+                $Null = New-Item -Path $GREPoSHBasicPath -ItemType Directory -Force
                 Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/GRE-PoSh-Basic/GRE-PoSh-Basic.psd1" -OutFile (-join ($GREPoSHBasicPath, "GRE-PoSh-Basic.psd1"))
                 Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/GRE-PoSh-Basic/GRE-PoSh-Basic.psm1" -OutFile (-join ($GREPoSHBasicPath, "GRE-PoSh-Basic.psm1"))
+            }
+            else
+            {
+                Write-Host "No network connection available, continue with Offline Module if available..."    
             }
 
             if((Get-Module GRE-PoSh-Basic -ListAvailable))
@@ -176,7 +186,7 @@
     Write-Host "#############################################################################################"
 
     ## Load GRE Basics from Github
-        Get-GREPoShBasic
+        Get-GREPoShBasic -ErrorAction "Stop"
     
     $StartProcessDate = Get-Date
     ##----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
