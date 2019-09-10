@@ -15,6 +15,8 @@
 
 #># SYNOPSIS
 
+[Version]$ProgramVersion = "1.0.0.0"
+
 function Enable-Privilege 
 {
     <#

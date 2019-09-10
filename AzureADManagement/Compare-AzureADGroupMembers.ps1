@@ -18,7 +18,7 @@
 #region ProgramInfo
 
 [string]$Script:ProgramName = "Compare-AzureADGroupMembers"
-[Version]$Script:ProgramVersion = "0.0.1"
+[Version]$Script:ProgramVersion = "0.0.2"
 [boolean]$Debug = $false
 [boolean]$Verbose = $false
 [boolean]$Warning = $false
@@ -63,138 +63,6 @@
     #region Function Area
         # if you have some functions, declare them in this region
         
-        function Write-TimeDebug
-        {
-            <#
-            .Synopsis
-            Writes Debug Message with Timestamp.
-
-            .Description
-            Combines Debug Message with current Time.
-
-            .Parameter Message
-            Mandatory Text to write as a Debug Message.
-            #>
-
-            [CmdletBinding()]
-            param
-            (
-                [Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-                $Message
-            )
-
-            # initialize variables with null
-            $Date = $null
-            $Output = $null
-
-            # set variables
-            $Date = Get-Date -Format "dd-MM-yyyy HH-mm-ss"
-            $Output = -join($Date," : ",$Message)
-
-            # write debug message
-            Write-Debug "$($Output)"
-        }
-
-        function Write-TimeHost
-        {
-            <#
-            .SYNOPSIS 
-            Adds Time to Write-Host
-
-            .PARAMETER Message
-            Message of Write-Host
-
-            .PARAMETER ForegroundColor
-            Desired Output Foreground Color.
-
-            .EXAMPLE
-            Write-TimeHost "This is a test"
-
-            .EXAMPLE
-            Write-TimeHost "This is a test" -ForegroundColor DarkCyan -NoNewline # if you use -NoNewline use as next output cmdlet Write-Host
-            #>
-
-            [CMDletBinding()]
-            param
-            (
-                [Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-                [string]$Message,
-                [Parameter(Mandatory=$false,Position=1,ValueFromPipeline=$true)]
-                [ValidateSet("Black","Blue","Cyan","Yellow","Magenta","Green","Red","White","Gray","DarkMagenta","DarkRed","DarkGreen","DarkCyan","DarkBlue","DarkGray")]
-                [string]$ForegroundColor,
-                [Parameter(Mandatory=$false,Position=2,ValueFromPipeline=$false)]
-                [switch]$NoNewline
-            )
-
-            # initialize variables with null
-            $Date = $null
-            $Output = $null
-
-            # set variables
-            $Date = Get-Date -Format "dd-MM-yyyy HH:mm:ss"    
-            $Output = -join($Date," : ",$Message)
-
-            $Command = "Write-Host `$Output"
-
-            # crerate expression command
-            if($ForegroundColor)
-            {
-                $Command = -join ($Command + " -ForegroundColor `$ForegroundColor")
-                Write-TimeDebug $Command 
-            }
-            if($NoNewline)
-            {
-                $Command = -join ($Command + " -NoNewline")
-                Write-TimeDebug $Command
-            }
-
-            # invoke expression
-            Invoke-Expression -Command $Command
-        }
-                   
-        function Invoke-ClosingTasks
-        {
-            <#
-            .Synopsis
-            Invoke Closing Task
-
-            .Description
-            Sets Exit State to either Finished or Error
-            Required cleanup steps can be implemented
-
-            .Parameter Reason
-            Valid strings: "finished", "error"
-
-            #>
-            [CmdletBinding()]
-            param
-            (
-                [Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
-                [ValidateSet("finished","error")]
-                [string]$Reason
-            )
-
-            Write-TimeDebug "Running closing tasks..."
-            Write-TimeHost "Running closing tasks..."
-
-            Stop-Transcript -ErrorAction SilentlyContinue
-            
-            # if you need to do steps depending of exit reason put it into this statement
-            if($Reason -eq "finished")
-            {
-                Write-TimeDebug "Execution finisehd. Closing Program..."
-                Write-TimeHost "Execution finisehd. Closing Program..." -ForegroundColor Green
-            }
-            elseif($Reason -eq "error")
-            {
-                Write-TimeDebug "Execution run on errors and will be closed..."
-                Write-TimeHost "Execution run on errors and will be closed..." -ForegroundColor Red
-            }
-
-            # Exit
-            Exit
-        } 
-
         function Draw-Menu {
             [CmdletBinding()]
             param (
@@ -366,6 +234,21 @@
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     #region script blocks
         # if you have some script blocks, declare them in this region
+
+        <#
+        $ClosingTasksOnFinish = 
+        {
+            ## Executed by Invoke-ClosingTasks -Reason finished
+        }
+        #>
+
+         <#
+        $ClosingTasksOnError = 
+        {
+            ## Executed by Invoke-ClosingTasks -Reason error
+        }
+        #>
+
     #endregion
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     #region variables
@@ -387,10 +270,8 @@
 
     try
     {
-
-        ConvertTo-SecureString -String "AMIGWGB22UYE252XOZIHLXK5OYPUW" -AsPlainText -Force
-        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/glwr/poshprivate/master/Modules/GRE-PoSh-Basic.ps1?token=AMIGWGB22UYE252XOZIHLXK5OYPUW"
-        Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/poshprivate/master/Modules/GRE-PoSh-Basic.ps1" -Method Get -FollowRelLink -Token (ConvertTo-SecureString -String "AMIGWGB22UYE252XOZIHLXK5OYPUW" -AsPlainText -Force)
+        $GRE_PoSh_Basic = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/GRE-PoSh-Basic.ps1"
+        Invoke-Expression -Command $GRE_PoSh_Basic
 
         # set execution policy for this process
         Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process -Force
