@@ -18,7 +18,7 @@
 #region ProgramInfo
 
 [string]$Script:ProgramName = "Compare-AzureADGroupMembers"
-[Version]$Script:ProgramVersion = "0.0.2"
+[Version]$Script:ProgramVersion = "0.0.3"
 [boolean]$Debug = $false
 [boolean]$Verbose = $false
 [boolean]$Warning = $false
@@ -369,7 +369,7 @@
 
         ## Load GRE Basics from Github
         Get-GREPoShBasic -ErrorAction "Stop"
-        
+
         ## Check PS Version
  
         if($PSVersionTable.PSVersion -lt "6.0.0")
