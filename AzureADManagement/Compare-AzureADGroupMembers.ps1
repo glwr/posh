@@ -18,7 +18,7 @@
 #region ProgramInfo
 
 [string]$Script:ProgramName = "Compare-AzureADGroupMembers"
-[Version]$Script:ProgramVersion = "0.0.3"
+[Version]$Script:ProgramVersion = "0.0.4"
 [boolean]$Debug = $false
 [boolean]$Verbose = $false
 [boolean]$Warning = $false
@@ -114,7 +114,7 @@
             if($IsMacOS -eq $true)
             {  
                 Write-Host "MacOS detected"
-                $PoShModulePath = "$env:HOME/.local/share/powershell/Modules"
+                $PoShModulePath = $env:PSModulePath.Split(":")  | Where-Object {$_ -match "$env:USER/.local/share"}
                 $GREPoSHBasicPath = "$PoShModulePath/GRE-PoSh-Basic/"
             }
             elseif ($IsLinux -eq $true)
@@ -125,7 +125,7 @@
             elseif($IsWindows -eq $true)
             {
                 Write-Host "Windows detected"
-               $PoShModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules"
+               $PoShModulePath = $env:PSModulePath.Split(";")  | Where-Object {$_ -match "Documents"}
                $GREPoSHBasicPath = "$PoShModulePath\GRE-PoSh-Basic\"
             }
             else 
