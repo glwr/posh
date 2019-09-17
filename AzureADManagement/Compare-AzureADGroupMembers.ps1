@@ -356,7 +356,7 @@
 #endregion
 #############################################################################################
 #region process area
-    Write-TimeHost "Process Area" -ForegroundColor DarkCyan
+    Write-Host "Process Area" -ForegroundColor DarkCyan
     Write-Host "#############################################################################################"
 
     $StartProcessDate = Get-Date
