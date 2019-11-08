@@ -15,10 +15,26 @@
 
 #># SYNOPSIS
 #############################################################################################
+#region Param Block
+    param
+    (
+        [Parameter(Mandatory=$false,Position=0,ValueFromPipeline=$true)]
+        [string]$OSDrive = "C:",
+        [Parameter(Mandatory=$false,Position=1,ValueFromPipeline=$true)]
+        [string]$EncryptionMethod = "XtsAes256", # 	supported Aes128, Aes256, XtsAes128, XtsAes256
+        [Parameter(Mandatory=$false,Position=2,ValueFromPipeline=$true)]
+        [boolean]$RemoveOldEncryption = $true,
+        [Parameter(Mandatory=$false,Position=3,ValueFromPipeline=$true)]
+        [string]$OldEncryptionMethod  = "*128*", # with this you can disable all 128 bit encryption methods or you can specify a dedicated one
+        [Parameter(Mandatory=$false,Position=4,ValueFromPipeline=$true)]
+        [boolean]$CheckTPM = $true
+    )
+#endregion
+#############################################################################################
 #region ProgramInfo
 
 [string]$Script:ProgramName = "Enable-GK-BitlockerAndAADBackup"
-[Version]$Script:ProgramVersion = "1.5.7"
+[Version]$Script:ProgramVersion = "1.5.8"
 [boolean]$Debug = $false
 [boolean]$Verbose = $false
 [boolean]$Warning = $false
@@ -203,13 +219,11 @@
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     #region script variables
         # if you have some variables, declare them in this region
-        [string]$OSDrive = "C:"
-        [string]$EncryptionMethod = "XtsAes256" # 	supported Aes128, Aes256, XtsAes128, XtsAes256
-        [boolean]$RemoveOldEncryption = $true
-        [string]$OldEncryptionMethod  = "*128*" # with this you can disable all 128 bit encryption methods or you can specify a dedicated one
-        [boolean]$CheckTPM = $true
+        
+        # see param block at the top of the script
 
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12        
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12      
+
     #endregion
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     $EndPreStepsDate = Get-Date
