@@ -15,7 +15,7 @@
 
 #># SYNOPSIS
 
-[Version]$GREPoShBasicVersion = "1.0.0.0"
+[Version]$GREPoShBasicVersion = "1.0.0.1"
 
 function Enable-Privilege 
 {

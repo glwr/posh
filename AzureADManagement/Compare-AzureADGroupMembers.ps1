@@ -18,7 +18,7 @@
 #region ProgramInfo
 
 [string]$Script:ProgramName = "Compare-AzureADGroupMembers"
-[Version]$Script:ProgramVersion = "0.0.4"
+[Version]$Script:ProgramVersion = "0.0.5"
 [boolean]$Debug = $false
 [boolean]$Verbose = $false
 [boolean]$Warning = $false
