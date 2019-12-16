@@ -456,15 +456,20 @@
             Write-TimeHost "Compare $($Group.DisplayName) with $($AADGroupObject.DisplayName)" -ForegroundColor Cyan
             Write-TimeHost "Show Users that are not Members of " -ForegroundColor Cyan -NoNewline
             Write-Host  $($Group.DisplayName) -ForegroundColor Green
-            $ComparedObjects = Compare-Object -ReferenceObject $GroupMembers -DifferenceObject $ProfileGroupMemberUsers -PassThru | Where-Object {$_.SideIndicator -eq "=>"}
+            $ComparedObjectsMissingUsers = Compare-Object -ReferenceObject $GroupMembers -DifferenceObject $ProfileGroupMemberUsers -PassThru | Where-Object {$_.SideIndicator -eq "=>"}
+            $ComparedObjectsUnnecessaryUsers = Compare-Object -ReferenceObject $GroupMembers -DifferenceObject $ProfileGroupMemberUsers -PassThru | Where-Object {$_.SideIndicator -eq "=>"}
             Compare-Object -ReferenceObject $GroupMembers -DifferenceObject $ProfileGroupMemberUsers -Property "UserPrincipalName" | Where-Object {$_.SideIndicator -eq "=>"} | Format-Table
             Write-Host "-----------------------------------------------------------------------------------------"
         
             if($SyncUsers -eq $true)
             {
-                foreach($MissingUser in $ComparedObjects)
+                foreach($MissingUser in $ComparedObjectsMissingUsers)
                 {
                     Add-AzureADGroupMember -ObjectId $Group.ObjectId -RefObjectId $MissingUser.ObjectId
+                }
+                foreach($MissingUser in $ComparedObjectsUnnecessaryUsers)
+                {
+                    Remove-AzureADGroupMember -ObjectId $Group.ObjectId -MemberId $MissingUser.ObjectId
                 }
             }
         }
