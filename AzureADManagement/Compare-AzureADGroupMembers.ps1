@@ -336,12 +336,12 @@
         }
         #>
 
-         <#
+        <#
         $ClosingTasksOnError = 
         {
             ## Executed by Invoke-ClosingTasks -Reason error
         }
-        #>
+       #>
 
     #endregion
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -397,7 +397,7 @@
         elseif($IsWindows -eq $true)
         {
             Write-TimeHost "Running AzureAD default Module because we are on a Windows System"
-            Install-Module -Name AzureAD -AllowClobber -Scope CurrentUser
+            Install-Module -Name AzureAD -AllowClobber -Scope CurrentUser -Force
         }
 
         # connect to azure ad
@@ -436,6 +436,11 @@
             }
         }
 
+        if($ProfileGroupMemberUsers -eq $null)
+        {
+            $ProfileGroupMemberUsers = ""
+        }
+
         Write-Host "########################################################################################"
         Write-TimeHost "Count of Users in Profile " -ForegroundColor Cyan -NoNewline
         Write-Host  $($AADGroupObject.DisplayName) -ForegroundColor Green
@@ -447,45 +452,67 @@
         Write-Host  $($SyncUsers) -ForegroundColor Green
 
         Write-Host "########################################################################################"
-        Write-TimeHost "CompareGroups and Add missing users" -ForegroundColor Cyan
+        Write-TimeHost "CompareGroups and Add/Remove users" -ForegroundColor Cyan
         Write-Host "-----------------------------------------------------------------------------------------"
         
         foreach($Group in $ProfileGroupMemberGroups)
         {
             $GroupMembers = Get-AzureADGroupMember -ObjectId $Group.ObjectId -All:$true
+            if($GroupMembers -eq $null)
+            {
+                $GroupMembers = ""
+            }
             Write-TimeHost "Compare $($Group.DisplayName) with $($AADGroupObject.DisplayName)" -ForegroundColor Cyan
             Write-TimeHost "Show Users that are not Members of " -ForegroundColor Cyan -NoNewline
             Write-Host  $($Group.DisplayName) -ForegroundColor Green
             $ComparedObjectsMissingUsers = Compare-Object -ReferenceObject $GroupMembers -DifferenceObject $ProfileGroupMemberUsers -PassThru | Where-Object {$_.SideIndicator -eq "=>"}
-            $ComparedObjectsUnnecessaryUsers = Compare-Object -ReferenceObject $GroupMembers -DifferenceObject $ProfileGroupMemberUsers -PassThru | Where-Object {$_.SideIndicator -eq "=>"}
             Compare-Object -ReferenceObject $GroupMembers -DifferenceObject $ProfileGroupMemberUsers -Property "UserPrincipalName" | Where-Object {$_.SideIndicator -eq "=>"} | Format-Table
+           
+            Write-Host "-----------------------------------------------------------------------------------------"
+            
+            Write-TimeHost "Compare $($AADGroupObject.DisplayName) with $($Group.DisplayName)" -ForegroundColor Cyan
+            Write-TimeHost "Show Users that are not Members of " -ForegroundColor Cyan -NoNewline
+            Write-Host  $($AADGroupObject.DisplayName) -ForegroundColor Green
+            $ComparedObjectsUnnecessaryUsers = Compare-Object -ReferenceObject $GroupMembers -DifferenceObject $ProfileGroupMemberUsers -PassThru | Where-Object {$_.SideIndicator -eq "<="}
+            Compare-Object -ReferenceObject $GroupMembers -DifferenceObject $ProfileGroupMemberUsers -Property "UserPrincipalName" | Where-Object {$_.SideIndicator -eq "<="} | Format-Table
+            
             Write-Host "-----------------------------------------------------------------------------------------"
         
             if($SyncUsers -eq $true)
             {
-                foreach($MissingUser in $ComparedObjectsMissingUsers)
+                if(([string]::IsNullOrEmpty($ComparedObjectsMissingUsers)) -eq $false)
                 {
-                    Add-AzureADGroupMember -ObjectId $Group.ObjectId -RefObjectId $MissingUser.ObjectId
+                    foreach($MissingUser in $ComparedObjectsMissingUsers)
+                    {
+                        Add-AzureADGroupMember -ObjectId $Group.ObjectId -RefObjectId $MissingUser.ObjectId
+                    }
                 }
-                foreach($MissingUser in $ComparedObjectsUnnecessaryUsers)
+                if(([string]::IsNullOrEmpty($ComparedObjectsUnnecessaryUsers)) -eq $false)
                 {
-                    Remove-AzureADGroupMember -ObjectId $Group.ObjectId -MemberId $MissingUser.ObjectId
+                    foreach($MissingUser in $ComparedObjectsUnnecessaryUsers)
+                    {
+                        Remove-AzureADGroupMember -ObjectId $Group.ObjectId -MemberId $MissingUser.ObjectId
+                    }
                 }
             }
         }
 
         Write-Host "########################################################################################"
-        Write-TimeHost "Compare Groups and show Equal Users" -ForegroundColor Cyan
+        Write-TimeHost "Compare Groups and show Users" -ForegroundColor Cyan
         Write-Host "-----------------------------------------------------------------------------------------"
         
         foreach($Group in $ProfileGroupMemberGroups)
         {
             $GroupMembers = Get-AzureADGroupMember -ObjectId $Group.ObjectId -All:$true
+            if($GroupMembers -eq $null)
+            {
+                $GroupMembers = ""
+            }
             Write-TimeHost "Compare $($Group.DisplayName) with $($AADGroupObject.DisplayName)" -ForegroundColor Cyan
             Write-Host  $($Group.DisplayName) -ForegroundColor Green
-            Compare-Object -ReferenceObject $GroupMembers -DifferenceObject $ProfileGroupMemberUsers -Property "UserPrincipalName" -IncludeEqual | Where-Object {($_.SideIndicator -eq "=>") -or ($_.SideIndicator -eq "==")} | Format-Table
+            Compare-Object -ReferenceObject $GroupMembers -DifferenceObject $ProfileGroupMemberUsers -Property "UserPrincipalName" -IncludeEqual | Format-Table
             Write-Host "-----------------------------------------------------------------------------------------"
-        }
+        } 
 
     }
     catch

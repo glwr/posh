@@ -230,6 +230,17 @@ function Invoke-ClosingTasks
     {
         Write-TimeDebug "Execution run on errors and will be closed..."
 
+        Write-TimeHost -Message "Error CategoryInfo"  -ForegroundColor Red
+        $Error[0].CategoryInfo
+        Write-TimeHost -Message "Error Exception"  -ForegroundColor Red
+        $Error[0].Exception
+        Write-TimeHost -Message "Error FullyQualifiedErrorId"  -ForegroundColor Red
+        $Error[0].FullyQualifiedErrorId
+        Write-TimeHost -Message "Error InvocationInfo"  -ForegroundColor Red
+        $Error[0].InvocationInfo
+        Write-TimeHost -Message "Error ScriptStackTrace"  -ForegroundColor Red
+        $Error[0].ScriptStackTrace
+
         ## check for scriptblock with additional tasks and execute it
         if($ClosingTasksOnError)
         {
