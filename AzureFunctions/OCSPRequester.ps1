@@ -192,8 +192,43 @@
     ##----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
      ## put your code here!
 
-        
+     Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force
+     if(!(Get-Module PSPKI))
+     {
+        Install-Module PSPKI -Scope CurrentUser -Force
+     }
 
+     $rootpath = "$env:USERPROFILE\OneDrive - Glück & Kanja Consulting AG\Desktop\ocsp"
+     $Certpath = "certs\clients\scepman-device-cert.cer"
+     $ocspcert = -join ($rootpath, "\", $Certpath)
+
+     workflow Start-Parallel-ocsps
+     {
+        Param
+        (
+            [Parameter(Mandatory=$true)]
+            [String]
+            $ocspcert
+        )
+
+        $parallel_worker = 1..5
+        $request_count = 10
+
+        foreach -parallel ($j in $parallel_worker)
+        {
+            for($i; $i -le $request_count;$i++)
+            {
+                InlineScript
+                {
+                    Import-Module PSPKI
+                    $Request = New-Object pki.ocsp.ocsprequest $using:ocspcert
+                    $Request.SendRequest()
+                }
+            }
+        }
+     }
+     
+     Start-Parallel-ocsps -ocspcert $ocspcert
 
     ##----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     $EndProcessDate = Get-Date
