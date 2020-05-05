@@ -189,11 +189,15 @@
                 [int]
                 $request_count
             )
+
+            Import-Module PSPKI
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 
+
             for($i; $i -lt $request_count;$i++)
             {
-                Import-Module PSPKI
                 $Request = New-Object pki.ocsp.ocsprequest $ocspcert
                 $Request.SendRequest()
+                Start-Sleep -Seconds 2
             }
         }
 
