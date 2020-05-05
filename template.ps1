@@ -185,6 +185,9 @@
     Write-TimeHost "Process Area" -ForegroundColor DarkCyan
     Write-Host "#############################################################################################"
 
+    ## set execution policy for this process
+    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force
+
     ## Load GRE Basics from Github
         Get-GREPoShBasic -ErrorAction "Stop"
     

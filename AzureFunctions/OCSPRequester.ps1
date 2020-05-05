@@ -185,6 +185,9 @@
     Write-TimeHost "Process Area" -ForegroundColor DarkCyan
     Write-Host "#############################################################################################"
 
+    ## set execution policy for this process
+    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force
+
     ## Load GRE Basics from Github
         Get-GREPoShBasic -ErrorAction "Stop"
     
@@ -192,24 +195,23 @@
     ##----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
      ## put your code here!
 
-     Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force
-     if(!(Get-Module PSPKI))
-     {
-        Install-Module PSPKI -Scope CurrentUser -Force
-     }
+    if(!(Get-Module PSPKI))
+    {
+    Install-Module PSPKI -Scope CurrentUser -Force
+    }
 
-     $rootpath = "$env:USERPROFILE\OneDrive - Glück & Kanja Consulting AG\Desktop\ocsp"
-     $Certpath = "certs\clients\scepman-device-cert.cer"
-     $ocspcert = -join ($rootpath, "\", $Certpath)
+    $rootpath = "$env:USERPROFILE\OneDrive - Glück & Kanja Consulting AG\Desktop\ocsp"
+    $Certpath = "certs\clients\scepman-device-cert.cer"
+    $ocspcert = -join ($rootpath, "\", $Certpath)
 
-     workflow Start-Parallel-ocsps
-     {
-        Param
-        (
-            [Parameter(Mandatory=$true)]
-            [String]
-            $ocspcert
-        )
+    workflow Start-Parallel-ocsps
+    {
+    Param
+    (
+        [Parameter(Mandatory=$true)]
+        [String]
+        $ocspcert
+    )
 
         $parallel_worker = 1..5
         $request_count = 10
@@ -226,7 +228,7 @@
                 }
             }
         }
-     }
+    }
      
      Start-Parallel-ocsps -ocspcert $ocspcert
 
