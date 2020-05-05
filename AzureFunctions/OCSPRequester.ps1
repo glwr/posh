@@ -220,11 +220,12 @@
     Install-Module PSPKI -Scope CurrentUser -Force
     }
 
-    $rootpath = "$env:USERPROFILE\OneDrive - Glück & Kanja Consulting AG\Desktop\ocsp"
-    $Certpath = "certs\clients\scepman-device-cert.cer"
-    $ocspcert = -join ($rootpath, "\", $Certpath)
+    # path to the cer file you want to check
+    $ocspcert = "$env:USERPROFILE\OneDrive - Glück & Kanja Consulting AG\Desktop\ocsp\certs\clients\scepman-device-cert.cer"
 
+    # count of parallel jobs
     $parallel_worker = 1..5
+    # count of checks per job
     $request_count = 10
 
     foreach($j in $parallel_worker)
