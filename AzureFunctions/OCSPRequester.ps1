@@ -162,6 +162,26 @@
     #region script blocks
         ## if you have some script blocks, declare them in this region
 
+        $SendOCSPRequest = 
+        {
+            Param
+            (
+                [Parameter(Mandatory=$true)]
+                [String]
+                $ocspcert,
+                [Parameter(Mandatory=$true)]
+                [int]
+                $request_count
+            )
+            for($i; $i -le $request_count;$i++)
+            {
+                Import-Module PSPKI
+                $Request = New-Object pki.ocsp.ocsprequest $ocspcert
+                $Request.SendRequest()
+            }
+        }
+
+
         <#
         $ClosingTasksOnFinish = 
         {
@@ -182,7 +202,7 @@
 #endregion
 ##===================================================================================================================
 #region process area
-    Write-TimeHost "Process Area" -ForegroundColor DarkCyan
+    Write-Host "Process Area" -ForegroundColor DarkCyan
     Write-Host "#############################################################################################"
 
     ## set execution policy for this process
@@ -204,33 +224,13 @@
     $Certpath = "certs\clients\scepman-device-cert.cer"
     $ocspcert = -join ($rootpath, "\", $Certpath)
 
-    workflow Start-Parallel-ocsps
+    $parallel_worker = 1..5
+    $request_count = 10
+
+    foreach($j in $parallel_worker)
     {
-    Param
-    (
-        [Parameter(Mandatory=$true)]
-        [String]
-        $ocspcert
-    )
-
-        $parallel_worker = 1..5
-        $request_count = 10
-
-        foreach -parallel ($j in $parallel_worker)
-        {
-            for($i; $i -le $request_count;$i++)
-            {
-                InlineScript
-                {
-                    Import-Module PSPKI
-                    $Request = New-Object pki.ocsp.ocsprequest $using:ocspcert
-                    $Request.SendRequest()
-                }
-            }
-        }
+        Start-Job -ScriptBlock $SendOCSPRequest -ArgumentList $ocspcert, $request_count
     }
-     
-     Start-Parallel-ocsps -ocspcert $ocspcert
 
     ##----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     $EndProcessDate = Get-Date

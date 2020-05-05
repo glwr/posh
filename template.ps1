@@ -182,7 +182,7 @@
 #endregion
 ##===================================================================================================================
 #region process area
-    Write-TimeHost "Process Area" -ForegroundColor DarkCyan
+    Write-Host "Process Area" -ForegroundColor DarkCyan
     Write-Host "#############################################################################################"
 
     ## set execution policy for this process
