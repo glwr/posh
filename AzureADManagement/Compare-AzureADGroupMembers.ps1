@@ -32,36 +32,36 @@
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     #region initialize logging
 
-        # check if warning messages should be printed or silently continued
+        ## check if warning messages should be printed or silently continued
         if($Warning){$WarningPreference = "Continue"}else{$WarningPreference = "SilentlyContinue"}
-        # check if verbose messages should be printed or silently continued
+        ## check if verbose messages should be printed or silently continued
         if($Verbose){$VerbosePreference = "Continue"}else{$VerbosePreference = "SilentlyContinue"}
-        # check if debug, verbose and warning messages should be printed or silently continued
+        ## check if debug, verbose and warning messages should be printed or silently continued
         if($Debug){$DebugPreference = "Continue";$VerbosePreference = "Continue";$WarningPreference = "Continue"}else{$DebugPreference = "SilentlyContinue"}
         
-        # define log root folder # if realmjoin is available set to "C:\Windows\Logs\RealmJoin\Packages"
+        ## define log root folder # if realmjoin is available set to "C:\Windows\Logs\RealmJoin\Packages"
         $LogRoot = "C:\Temp\Logs"
-        # time stamp for log file name
+        ## time stamp for log file name
         $LogDate = Get-Date -Format "yyyy-MM-dd-HH-mm-ss"
-        # sub folder where logs will be saved
+        ## sub folder where logs will be saved
         $LogFolder= -join ($LogRoot, "\", $ProgramName)
-        # full path of the log file
+        ## full path of the log file
         $LogFile = -join ($LogFolder, "\", $LogDate, "_", $ProgramName, ".log")
         
-        # test if log path already available
+        ## test if log path already available
             if(!(Test-Path $LogFolder))
             {
-                # create log directory
+                ## create log directory
                 New-Item -Path $LogRoot -Name $ProgramName -ItemType Directory
             }
 
-        # start logging
+        ## start logging
             Start-Transcript -Path $LogFile -Force
 
     #endregion
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     #region Function Area
-        # if you have some functions, declare them in this region
+        ## if you have some functions, declare them in this region
         
         function Get-GREPoShBasic
        { 
@@ -88,6 +88,7 @@
             $CheckIfOnline =
             {
                 $ErrorActionPreference = "SilentlyContinue"
+                [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
                 $WebResponse = Invoke-WebRequest -Method Get -Uri "https://raw.githubusercontent.com"
                 $ErrorActionPreference = "Continue"
                 if($WebResponse.StatusCode -eq 200)
@@ -103,7 +104,7 @@
             if(($PSVersionTable.PSVersion -lt "6.0.0") -and ($PSVersionTable.PSVersion -ge "5.0.0"))
             {
                     Write-Host "PS Version lower than 6, set `$IsWindows to `$true."
-                    $IsWindows = $true
+                    $IsWindowsAndOldPS = $true
             }
             elseif ($PSVersionTable.PSVersion -lt "5.0.0") 
             {
@@ -122,7 +123,7 @@
                 Write-Host "Linix not supported/tested. We will exit."
                 Exit 1
             } 
-            elseif($IsWindows -eq $true)
+            elseif(($IsWindows -eq $true) -or ($IsWindowsAndOldPS -eq $true))
             {
                 Write-Host "Windows detected"
                $PoShModulePath = $env:PSModulePath.Split(";")  | Where-Object {$_ -match "Documents"}
@@ -327,7 +328,7 @@
     #endregion
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     #region script blocks
-        # if you have some script blocks, declare them in this region
+        ## if you have some script blocks, declare them in this region
 
         <#
         $ClosingTasksOnFinish = 
@@ -529,8 +530,8 @@
     Write-TimeHost "Final Area" -ForegroundColor DarkCyan
     Write-Host "#############################################################################################"
 
-    # calculate ScriptDuration
-    #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    ## calculate ScriptDuration
+    ##----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     $PreStepsDuration = $EndPreStepsDate - $StartPreStepsDate
     $ProcessDuration = $EndProcessDate - $StartProcessDate
@@ -540,7 +541,7 @@
     $ScriptDur = [math]::Ceiling($PreStepsDuration.TotalMinutes) + [math]::Ceiling($ProcessDuration.TotalMinutes)
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    # print ScriptDuration
+    ## print ScriptDuration
     Write-TimeHost "Duration of Presteps: $PreDur" -ForegroundColor DarkCyan
     Write-TimeHost "Duration of Processing: $ProcDur" -ForegroundColor DarkCyan
     Write-TimeHost "Duration of overall Program: $ScriptDur" -ForegroundColor DarkCyan
@@ -548,4 +549,4 @@
     
     Invoke-ClosingTasks -Reason finished
 #endregion
-#===================================================================================================================
+##===================================================================================================================

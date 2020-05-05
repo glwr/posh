@@ -14,7 +14,7 @@
 .EXAMPLE
 
 #># SYNOPSIS
-##===================================================================================================================
+#############################################################################################
 #region ProgramInfo
 
 [string]$Script:ProgramName = "NameOfTheScriptOrProgram"
@@ -24,7 +24,7 @@
 [boolean]$Warning = $false
 
 #endregion
-##===================================================================================================================
+#############################################################################################
 #region Pre Steps
 
     $StartPreStepsDate = Get-Date
@@ -62,6 +62,7 @@
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     #region Function Area
         ## if you have some functions, declare them in this region
+
        function Get-GREPoShBasic
        { 
            <#
@@ -87,6 +88,7 @@
             $CheckIfOnline =
             {
                 $ErrorActionPreference = "SilentlyContinue"
+                [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
                 $WebResponse = Invoke-WebRequest -Method Get -Uri "https://raw.githubusercontent.com"
                 $ErrorActionPreference = "Continue"
                 if($WebResponse.StatusCode -eq 200)
@@ -113,7 +115,7 @@
             if($IsMacOS -eq $true)
             {  
                 Write-Host "MacOS detected"
-                $PoShModulePath = "$env:HOME/.local/share/powershell/Modules"
+                $PoShModulePath = $env:PSModulePath.Split(":")  | Where-Object {$_ -match "$env:USER/.local/share"}
                 $GREPoSHBasicPath = "$PoShModulePath/GRE-PoSh-Basic/"
             }
             elseif ($IsLinux -eq $true)
@@ -124,7 +126,7 @@
             elseif(($IsWindows -eq $true) -or ($IsWindowsAndOldPS -eq $true))
             {
                 Write-Host "Windows detected"
-               $PoShModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules"
+               $PoShModulePath = $env:PSModulePath.Split(";")  | Where-Object {$_ -match "Documents"}
                $GREPoSHBasicPath = "$PoShModulePath\GRE-PoSh-Basic\"
             }
             else 
@@ -178,27 +180,43 @@
 
     #endregion
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    #region variables
+        ## define your variables here
+    #endregion
+    #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    
     $EndPreStepsDate = Get-Date
 #endregion
-##===================================================================================================================
+#############################################################################################
 #region process area
     Write-Host "Process Area" -ForegroundColor DarkCyan
     Write-Host "#############################################################################################"
 
-    ## set execution policy for this process
-    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force
+    $StartProcessDate = Get-Date
+    #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    
+    try 
+    {
+        ## set execution policy for this process
+        Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force
 
-    ## Load GRE Basics from Github
+        ## Load GRE Basics from Github
         Get-GREPoShBasic -ErrorAction "Stop"
     
-    $StartProcessDate = Get-Date
-    ##----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-     ## put your code here!
-    ##----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        ##----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+            ## put your code here!
+        ##--------------------------------------------------
+    }
+    catch
+    {
+        Invoke-ClosingTasks -Reason error
+    }
+
+    #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     $EndProcessDate = Get-Date
 
 #endregion
-##===================================================================================================================
+#############################################################################################
 #region final area
     Write-TimeHost "Final Area" -ForegroundColor DarkCyan
     Write-Host "#############################################################################################"
@@ -212,7 +230,7 @@
     $PreDur = -join ([math]::Ceiling($PreStepsDuration.TotalMinutes), " Minutes")
     $ProcDur = -join ([math]::Ceiling($ProcessDuration.TotalMinutes), " Minutes")
     $ScriptDur = [math]::Ceiling($PreStepsDuration.TotalMinutes) + [math]::Ceiling($ProcessDuration.TotalMinutes)
-    ##----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     ## print ScriptDuration
     Write-TimeHost "Duration of Presteps: $PreDur" -ForegroundColor DarkCyan
