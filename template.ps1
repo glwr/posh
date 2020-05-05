@@ -102,7 +102,7 @@
             if(($PSVersionTable.PSVersion -lt "6.0.0") -and ($PSVersionTable.PSVersion -ge "5.0.0"))
             {
                     Write-Host "PS Version lower than 6, set `$IsWindows to `$true."
-                    $IsWindows = $true
+                    $IsWindowsAndOldPS = $true
             }
             elseif ($PSVersionTable.PSVersion -lt "5.0.0") 
             {
@@ -121,7 +121,7 @@
                 Write-Host "Linix not supported/tested. We will exit."
                 Exit 1
             } 
-            elseif($IsWindows -eq $true)
+            elseif(($IsWindows -eq $true) -or ($IsWindowsAndOldPS -eq $true))
             {
                 Write-Host "Windows detected"
                $PoShModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules"
