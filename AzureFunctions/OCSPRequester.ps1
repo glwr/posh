@@ -173,7 +173,7 @@
                 [int]
                 $request_count
             )
-            for($i; $i -le $request_count;$i++)
+            for($i; $i -lt $request_count;$i++)
             {
                 Import-Module PSPKI
                 $Request = New-Object pki.ocsp.ocsprequest $ocspcert
