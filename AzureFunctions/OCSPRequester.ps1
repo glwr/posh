@@ -167,7 +167,7 @@ function Get-GREPoShTools
     {  
         Write-Host "MacOS detected"
         $PoShModulePath = $env:PSModulePath.Split(":")  | Where-Object {$_ -match "$env:USER/.local/share"}
-        $GREPoSHBasicPath = "$PoShModulePath/GRE-PoSh-Basic/"
+        $GREPoSHToolsPath = "$PoShModulePath/GRE-PoSh-Tools/"
     }
     elseif ($IsLinux -eq $true)
     {
@@ -178,7 +178,7 @@ function Get-GREPoShTools
     {
         Write-Host "Windows detected"
         $PoShModulePath = $env:PSModulePath.Split(";")  | Where-Object {$_ -match "Documents"}
-        $GREPoSHBasicPath = "$PoShModulePath\GRE-PoSh-Basic\"
+        $GREPoSHToolsPath = "$PoShModulePath\GRE-PoSh-Tools\"
     }
     else 
     {
@@ -189,9 +189,9 @@ function Get-GREPoShTools
     if((Invoke-Command -ScriptBlock $CheckIfOnline) -eq $true)
     {
         Write-Host "We are online, download GRE PoSh Basic ps1..."
-        $Null = New-Item -Path $GREPoSHBasicPath -ItemType Directory -Force
-        Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/GRE-PoSh-Tools/GRE-PoSh-Tools.psd1" -OutFile (-join ($GREPoSHBasicPath, "GRE-PoSh-Basic.psd1"))
-        Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/GRE-PoSh-Tools/GRE-PoSh-Tools.psm1" -OutFile (-join ($GREPoSHBasicPath, "GRE-PoSh-Basic.psm1"))
+        $Null = New-Item -Path $GREPoSHToolsPath -ItemType Directory -Force
+        Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/GRE-PoSh-Tools/GRE-PoSh-Tools.psd1" -OutFile (-join ($GREPoSHToolsPath, "GRE-PoSh-Tools.psd1"))
+        Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/GRE-PoSh-Tools/GRE-PoSh-Tools.psm1" -OutFile (-join ($GREPoSHToolsPath, "GRE-PoSh-Tools.psm1"))
     }
     else
     {
@@ -201,11 +201,11 @@ function Get-GREPoShTools
     if((Get-Module GRE-PoSh-Basic -ListAvailable))
     {
         Write-Host "Import GRE PoSh Tools..."
-        Import-Module GRE-PoSh-Basic
+        Import-Module GRE-PoSh-Tools
     }
     else
     {
-        Write-Error -Message "Error during load GRE Basics- Module not available."
+        Write-Error -Message "Error during load GRE Tools- Module not available."
         Exit 1
     }
 }

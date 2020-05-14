@@ -17,7 +17,7 @@
 
 [Version]$GREPoShToolsVersion = "1.0.0.1"
 
-function Send-OCSPRequest 
+function Send-OCSPRequests
 {
     <#
     .SYNOPSIS
