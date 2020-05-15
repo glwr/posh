@@ -84,7 +84,16 @@ function Send-OCSPRequests
         [int]$WorkerIdleTime = 3
     )
     #endregion
+    #############################################################################################
+    #region ProgramInfo
 
+    [string]$Script:ProgramName = "Send-OCSPRequests"
+    [Version]$Script:ProgramVersion = "1.0.0"
+    [boolean]$Debug = $false
+    [boolean]$Verbose = $false
+    [boolean]$Warning = $false
+
+    #endregion
     #############################################################################################
     #region Pre Steps
 
