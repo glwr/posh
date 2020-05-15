@@ -229,7 +229,7 @@ function Send-OCSPRequests
         {
             if($CatchError -eq $true)
             {
-                Invoke-ClosingTasks -Reason error -ErrorObject $Error[0]
+                Invoke-ClosingTasks -Reason error -ErrorObject $Global:Error[0]
             }
         }
 
