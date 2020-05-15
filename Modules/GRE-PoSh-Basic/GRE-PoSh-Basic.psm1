@@ -204,14 +204,14 @@ function Invoke-ClosingTasks
     (
         [Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
         [ValidateSet("finished","error")]
-        [string]$Reason
+        [string]$Reason,
+        [Parameter(Mandatory=$false,Position=1,ValueFromPipeline=$true)]
+        $ErrorObject = $Error[0]
     )
 
     Write-TimeDebug "Running closing tasks..."
     Write-TimeHost "Running closing tasks..."
 
-    Stop-Transcript -ErrorAction SilentlyContinue
-    
     # if you need to do steps depending of exit reason put it into this statement
     if($Reason -eq "finished")
     {
@@ -231,15 +231,15 @@ function Invoke-ClosingTasks
         Write-TimeDebug "Execution run on errors and will be closed..."
 
         Write-TimeHost -Message "Error CategoryInfo"  -ForegroundColor Red
-        $Error[0].CategoryInfo
+        $ErrorObject.CategoryInfo
         Write-TimeHost -Message "Error Exception"  -ForegroundColor Red
-        $Error[0].Exception
+        $ErrorObject.Exception
         Write-TimeHost -Message "Error FullyQualifiedErrorId"  -ForegroundColor Red
-        $Error[0].FullyQualifiedErrorId
+        $ErrorObject.FullyQualifiedErrorId
         Write-TimeHost -Message "Error InvocationInfo"  -ForegroundColor Red
-        $Error[0].InvocationInfo
+        $ErrorObject.InvocationInfo
         Write-TimeHost -Message "Error ScriptStackTrace"  -ForegroundColor Red
-        $Error[0].ScriptStackTrace
+        $ErrorObject.ScriptStackTrace
 
         ## check for scriptblock with additional tasks and execute it
         if($ClosingTasksOnError)
@@ -248,9 +248,10 @@ function Invoke-ClosingTasks
         }
 
         Write-TimeHost "Execution run on errors and will be closed..." -ForegroundColor Red
+        Stop-Transcript -ErrorAction SilentlyContinue
         Exit 1
     }
-} 
+}  
 
 function Write-TimeHost
 {

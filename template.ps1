@@ -209,7 +209,14 @@
     }
     catch
     {
-        Invoke-ClosingTasks -Reason error
+        $CatchError = $true
+    }
+    finally
+    {
+        if($CatchError -eq $true)
+        {
+                Invoke-ClosingTasks -Reason error
+        }
     }
 
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
