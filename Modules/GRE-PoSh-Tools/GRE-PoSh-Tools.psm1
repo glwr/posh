@@ -15,7 +15,7 @@
 
 #># SYNOPSIS
 
-[Version]$GREPoShToolsVersion = "1.0.0.1"
+[Version]$GREPoShToolsVersion = "1.0.0.2"
 
 function Send-OCSPRequests
 {
@@ -296,6 +296,11 @@ function Send-OCSPRequests
                 Install-Module PSPKI -Scope CurrentUser -Force
             }
 
+            # test if we can send ocsp requests
+
+            Invoke-Command -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, $request_count, $IdleTime
+
+            # start workers to send ocsp requests
             foreach($j in $parallel_worker)
             {
                 Start-Job -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, $request_count, $IdleTime
