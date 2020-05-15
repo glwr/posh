@@ -120,7 +120,7 @@
     {
         if($CatchError -eq $true)
         {
-            Invoke-ClosingTasks -Reason error
+            Invoke-ClosingTasks -Reason error -ErrorObject $Global:Error[0]
         }
     }
 
