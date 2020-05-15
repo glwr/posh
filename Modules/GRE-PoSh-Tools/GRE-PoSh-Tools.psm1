@@ -132,103 +132,6 @@ function Send-OCSPRequests
         #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         #region Function Area
             ## if you have some functions, declare them in this region
-
-            function Get-GREPoShBasic
-            { 
-                <#
-                .SYNOPSIS
-                    Load some Basic functions. 
-    
-                .DESCRIPTION
-                    For all common functions I reuse in multiple scripts I centralized it in a Basic functions script.
-    
-                .NOTES
-                    Creation    : 09/06/2019
-                    Author      : glwr
-                    Requires    : PowerShell  6
-    
-                .LINK
-    
-                .EXAMPLE
-    
-                    Get-GREPoShBasic
-    
-                #># SYNOPSIS
-    
-                $CheckIfOnline =
-                {
-                    $ErrorActionPreference = "SilentlyContinue"
-                    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-                    $WebResponse = Invoke-WebRequest -Method Get -Uri "https://raw.githubusercontent.com"
-                    $ErrorActionPreference = "Continue"
-                    if($WebResponse.StatusCode -eq 200)
-                    {
-                        return $true
-                    }
-                    else 
-                    {
-                        return $false   
-                    }
-                }
-    
-                if(($PSVersionTable.PSVersion -lt "6.0.0") -and ($PSVersionTable.PSVersion -ge "5.0.0"))
-                {
-                        Write-Host "PS Version lower than 6, set `$IsWindows to `$true."
-                        $IsWindowsAndOldPS = $true
-                }
-                elseif ($PSVersionTable.PSVersion -lt "5.0.0") 
-                {
-                        Write-Host "PS Version is lower than 5, we will exit the execution. Please Update Windows PowerShell!"
-                        Exit 1
-                }
-    
-                if($IsMacOS -eq $true)
-                {  
-                    Write-Host "MacOS detected"
-                    $PoShModulePath = $env:PSModulePath.Split(":")  | Where-Object {$_ -match "$env:USER/.local/share"}
-                    $GREPoSHBasicPath = "$PoShModulePath/GRE-PoSh-Basic/"
-                }
-                elseif ($IsLinux -eq $true)
-                {
-                    Write-Host "Linix not supported/tested. We will exit."
-                    Exit 1
-                } 
-                elseif(($IsWindows -eq $true) -or ($IsWindowsAndOldPS -eq $true))
-                {
-                    Write-Host "Windows detected"
-                    $PoShModulePath = $env:PSModulePath.Split(";")  | Where-Object {$_ -match "Documents"}
-                    $GREPoSHBasicPath = "$PoShModulePath\GRE-PoSh-Basic\"
-                }
-                else 
-                {
-                    Write-Error "No OS detected. We will close this execution."
-                    Exit 1
-                }
-    
-                if((Invoke-Command -ScriptBlock $CheckIfOnline) -eq $true)
-                {
-                    Write-Host "We are online, download GRE PoSh Basic ps1..."
-                    $Null = New-Item -Path $GREPoSHBasicPath -ItemType Directory -Force
-                    Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/GRE-PoSh-Basic/GRE-PoSh-Basic.psd1" -OutFile (-join ($GREPoSHBasicPath, "GRE-PoSh-Basic.psd1"))
-                    Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/GRE-PoSh-Basic/GRE-PoSh-Basic.psm1" -OutFile (-join ($GREPoSHBasicPath, "GRE-PoSh-Basic.psm1"))
-                }
-                else
-                {
-                    Write-Host "No network connection available, continue with Offline Module if available..."    
-                }
-    
-                if((Get-Module GRE-PoSh-Basic -ListAvailable))
-                {
-                    Write-Host "Import GRE PoSh Basic..."
-                    Import-Module GRE-PoSh-Basic
-                }
-                else
-                {
-                    Write-Error -Message "Error during load GRE Basics- Module not available."
-                    Exit 1
-                }
-            }
-
         #endregion
         #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         #region script blocks
@@ -295,26 +198,28 @@ function Send-OCSPRequests
         try 
         {
             ## set execution policy for this process
-            Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force
+                Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force
 
             ## Load GRE Basics from Github
-                Get-GREPoShBasic -ErrorAction "Stop"
+                $RemoteCode = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/Get-ModulesLoader.ps1" 
+                Invoke-Expression $RemoteCode
+                Get-GREPoShBasic -ErrorAction "Stop" 
 
+            ## Install the PSPKI Module
             if(!(Get-Module PSPKI))
             {
                 Install-Module PSPKI -Scope CurrentUser -Force
             }
 
-            # test if we can send ocsp requests
+            ## test if we can send ocsp requests
+                Invoke-Command -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, 1, 1
 
-            Invoke-Command -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, 1, 1
-
-            # start workers to send ocsp requests
-            foreach($j in $parallel_worker)
-            {
-                Start-Job -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, $request_count, $IdleTime
-                Start-Sleep -Seconds $StartUpDelay
-            }
+            ## start workers to send ocsp requests
+                foreach($j in $parallel_worker)
+                {
+                    Start-Job -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, $request_count, $IdleTime
+                    Start-Sleep -Seconds $StartUpDelay
+                }
         }
         catch
         {
@@ -324,7 +229,7 @@ function Send-OCSPRequests
         {
             if($CatchError -eq $true)
             {
-                 Invoke-ClosingTasks -Reason error -ErrorObject $Error[0]
+                Invoke-ClosingTasks -Reason error -ErrorObject $Error[0]
             }
         }
 
