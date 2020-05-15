@@ -298,7 +298,7 @@ function Send-OCSPRequests
 
             # test if we can send ocsp requests
 
-            Invoke-Command -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, $request_count, $IdleTime
+            Invoke-Command -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, 1, 1
 
             # start workers to send ocsp requests
             foreach($j in $parallel_worker)
