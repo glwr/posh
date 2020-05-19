@@ -157,10 +157,10 @@ function Send-OCSPRequests
                 (
                     [Parameter(Mandatory=$true)]
                     [String]
-                    $ocspcert,
+                    $CertPath,
                     [Parameter(Mandatory=$true)]
                     [int]
-                    $request_count,
+                    $Requests,
                     [Parameter(Mandatory=$false)]
                     [int]
                     $WorkerIdleTime
@@ -169,9 +169,9 @@ function Send-OCSPRequests
                 Import-Module PSPKI
                 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 
 
-                for($i; $i -lt $request_count;$i++)
+                for($i; $i -lt $Requests;$i++)
                 {
-                    $Request = New-Object pki.ocsp.ocsprequest $ocspcert
+                    $Request = New-Object pki.ocsp.ocsprequest $CertPath
                     $Request.SendRequest()
                     Start-Sleep -Seconds $WorkerIdleTime
                 }
@@ -215,9 +215,9 @@ function Send-OCSPRequests
                 Invoke-Command -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, 1, 1
 
             ## start workers to send ocsp requests
-                foreach($j in $parallel_worker)
+                foreach($j in $Worker)
                 {
-                    Start-Job -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, $request_count, $IdleTime
+                    Start-Job -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, $Requests, $WorkerIdleTime
                     Start-Sleep -Seconds $StartUpDelay
                 }
         }
