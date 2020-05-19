@@ -15,7 +15,7 @@
 
 #># SYNOPSIS
 
-[Version]$GREPoShToolsVersion = "1.0.0.2"
+[Version]$GREPoShToolsVersion = "1.0.0.3"
 
 function Send-OCSPRequests
 {
@@ -88,7 +88,7 @@ function Send-OCSPRequests
     #region ProgramInfo
 
     [string]$Script:ProgramName = "Send-OCSPRequests"
-    [Version]$Script:ProgramVersion = "1.0.0"
+    [Version]$Script:ProgramVersion = "1.0.1"
     [boolean]$Debug = $false
     [boolean]$Verbose = $false
     [boolean]$Warning = $false
