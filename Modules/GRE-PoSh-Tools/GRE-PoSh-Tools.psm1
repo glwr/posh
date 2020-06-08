@@ -84,7 +84,7 @@ function Send-OCSPRequests
         [int]$WorkerIdleTime = 3,
         ## Receiving Job data
         [Parameter(Mandatory=$false)]
-        [switch]$ReceiveWorkerJobs = $false 
+        [switch]$ReceiveWorkerJobs
     )
     #endregion
     #############################################################################################
