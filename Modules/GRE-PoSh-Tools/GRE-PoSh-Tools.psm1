@@ -81,7 +81,10 @@ function Send-OCSPRequests
         [int]$Requests = 1200,
         ## Idle time between each ocsp request in secounds.
         [Parameter(Mandatory=$false)]
-        [int]$WorkerIdleTime = 3
+        [int]$WorkerIdleTime = 3,
+        ## Receiving Job data
+        [Parameter(Mandatory=$false)]
+        [switch]$ReceiveWorkerJobs = $false 
     )
     #endregion
     #############################################################################################
@@ -237,13 +240,22 @@ function Send-OCSPRequests
                 Invoke-Command -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, 1, 1
 
             ## start workers to send ocsp requests
-                Write-TimeHost "Start remote worker jobs..."
+                Write-TimeHost "Start remote worker jobs..." -ForegroundColor DarkCyan
                 foreach($j in $Worker)
                 {
                     Write-TimeHost "Start remote worker number $j..." -ForegroundColor DarkCyan
-                    Start-Job -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, $Requests, $WorkerIdleTime
+                    Start-Job -Name "OCSPWorker$j"  -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, $Requests, $WorkerIdleTime
                     Start-Sleep -Seconds $StartUpDelay
                 }
+
+            ## receiving worker jobs if you want to
+                Write-TimeHost "ReceiveWorkerJobs is set to $ReceiveWorkerJobs" -ForegroundColor DarkCyan
+                if($ReceiveWorkerJobs -eq $true)
+                {
+                    Receive-Job -Name "OCSPWorker*" -WriteJobInResults -WriteEvents -Wait
+                    Get-Job -Name "OCSPWorker*"
+                } 
+ 
         }
         catch
         {
