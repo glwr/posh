@@ -166,9 +166,12 @@ function Send-OCSPRequests
                     $WorkerIdleTime
                 )
 
-                Import-Module PSPKI
+                Write-TimeHost "Import Module PSPKI..."
+                Import-Module PSPKI -ErrorAction Stop
+                Write-TimeHost "Set Net ServicePointManager SecurityProtocol to Tls 1.2 ..."
                 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 
 
+                Write-TimeHost "Start sending $Requests requests..."
                 for($i; $i -lt $Requests;$i++)
                 {
                     $Request = New-Object pki.ocsp.ocsprequest $CertPath
@@ -198,25 +201,32 @@ function Send-OCSPRequests
         try 
         {
             ## set execution policy for this process
+                Write-Host "Setting ExecutionPolicy for this process..."
                 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force
 
             ## Load GRE Basics from Github
+                Write-Host "Loading Modules from Github..."
                 $RemoteCode = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/Get-ModulesLoader.ps1" 
                 Invoke-Expression $RemoteCode
                 Get-GREPoShBasic -ErrorAction "Stop" 
 
             ## Install the PSPKI Module
+            Write-TimeHost "Check if the PSPKI Module needs to be downloaded..."
             if(!(Get-Module PSPKI))
             {
+                Write-TimeHost "Downloading PSPKI Module..."
                 Install-Module PSPKI -Scope CurrentUser -Force
             }
 
             ## test if we can send ocsp requests
+                Write-TimeHost "Test if we can send an ocsp request..."
                 Invoke-Command -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, 1, 1
 
             ## start workers to send ocsp requests
+                Write-TimeHost "Start remote worker jobs..."
                 foreach($j in $Worker)
                 {
+                    Write-TimeHost "Start remote worker number $j..."
                     Start-Job -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, $Requests, $WorkerIdleTime
                     Start-Sleep -Seconds $StartUpDelay
                 }
