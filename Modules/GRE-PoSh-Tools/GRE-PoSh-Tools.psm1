@@ -15,7 +15,7 @@
 
 #># SYNOPSIS
 
-[Version]$GREPoShToolsVersion = "1.0.0.3"
+[Version]$GREPoShToolsVersion = "1.0.0.4"
 
 function Send-OCSPRequests
 {
@@ -166,27 +166,26 @@ function Send-OCSPRequests
                     $WorkerIdleTime
                 )
 
-                Write-TimeHost "Import Module PSPKI..."
+                Write-TimeHost "Import Module PSPKI..." -ForegroundColor DarkCyan
                 Import-Module PSPKI -ErrorAction Stop
-                Write-TimeHost "Set Net ServicePointManager SecurityProtocol to Tls 1.2 ..."
+                Write-TimeHost "Set Net ServicePointManager SecurityProtocol to Tls 1.2 ..." -ForegroundColor DarkCyan
                 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 
 
-                Write-TimeHost "Send Test request to the System ..."
+                Write-TimeHost "Send Test request to the System ..." -ForegroundColor DarkCyan
                 $TestRequest = New-Object pki.ocsp.ocsprequest $CertPath
                 $ErrorActionPreference = "SilentlyContinue"
                 $WebResponse = Invoke-WebRequest -Method Get -Uri "https://$($TestRequest.URL.Host)"
                 $ErrorActionPreference = "Continue"
                 if($WebResponse.StatusCode -eq 200)
                 {
-                    Write-TimeHost "OCSP System is online...."
+                    Write-TimeHost "OCSP System is online...." -ForegroundColor DarkCyan
                 }
                 else 
                 {
                     Write-Error -Message "OCSP System is offline, stop execution, check network or OCSP System. WebResponse StatusCode is $($WebResponse.StatusCode)"
-                    Exit 1
-                } 
+                }
 
-                Write-TimeHost "Start sending $Requests requests..."
+                Write-TimeHost "Start sending $Requests requests..." -ForegroundColor DarkCyan
                 for($i; $i -lt $Requests;$i++)
                 {
                     $Request = New-Object pki.ocsp.ocsprequest $CertPath
@@ -216,32 +215,32 @@ function Send-OCSPRequests
         try 
         {
             ## set execution policy for this process
-                Write-Host "Setting ExecutionPolicy for this process..."
+                Write-Host "Setting ExecutionPolicy for this process..." -ForegroundColor DarkCyan
                 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force
 
             ## Load GRE Basics from Github
-                Write-Host "Loading Modules from Github..."
+                Write-Host "Loading Modules from Github..." -ForegroundColor DarkCyan
                 $RemoteCode = Invoke-RestMethod -Uri "https://raw.githubusercontent.com/glwr/posh/master/Modules/Get-ModulesLoader.ps1" 
                 Invoke-Expression $RemoteCode
                 Get-GREPoShBasic -ErrorAction "Stop" 
 
             ## Install the PSPKI Module
-            Write-TimeHost "Check if the PSPKI Module needs to be downloaded..."
+            Write-TimeHost "Check if the PSPKI Module needs to be downloaded..." -ForegroundColor DarkCyan
             if(!(Get-Module PSPKI))
             {
-                Write-TimeHost "Downloading PSPKI Module..."
+                Write-TimeHost "Downloading PSPKI Module..." -ForegroundColor DarkCyan
                 Install-Module PSPKI -Scope CurrentUser -Force
             }
 
             ## test if we can send ocsp requests
-                Write-TimeHost "Test if we can send an ocsp request..."
+                Write-TimeHost "Test if we can send an ocsp request..." -ForegroundColor DarkCyan
                 Invoke-Command -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, 1, 1
 
             ## start workers to send ocsp requests
                 Write-TimeHost "Start remote worker jobs..."
                 foreach($j in $Worker)
                 {
-                    Write-TimeHost "Start remote worker number $j..."
+                    Write-TimeHost "Start remote worker number $j..." -ForegroundColor DarkCyan
                     Start-Job -ScriptBlock $CreateOCSPRequest -ArgumentList $CertPath, $Requests, $WorkerIdleTime
                     Start-Sleep -Seconds $StartUpDelay
                 }
