@@ -171,6 +171,21 @@ function Send-OCSPRequests
                 Write-TimeHost "Set Net ServicePointManager SecurityProtocol to Tls 1.2 ..."
                 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 
 
+                Write-TimeHost "Send Test request to the System ..."
+                $TestRequest = New-Object pki.ocsp.ocsprequest $CertPath
+                $ErrorActionPreference = "SilentlyContinue"
+                $WebResponse = Invoke-WebRequest -Method Get -Uri "https://$($TestRequest.URL.Host)"
+                $ErrorActionPreference = "Continue"
+                if($WebResponse.StatusCode -eq 200)
+                {
+                    Write-TimeHost "OCSP System is online...."
+                }
+                else 
+                {
+                    Write-Error -Message "OCSP System is offline, stop execution, check network or OCSP System. WebResponse StatusCode is $($WebResponse.StatusCode)"
+                    Exit 1
+                } 
+
                 Write-TimeHost "Start sending $Requests requests..."
                 for($i; $i -lt $Requests;$i++)
                 {
