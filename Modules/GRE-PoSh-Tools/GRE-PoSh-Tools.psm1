@@ -177,7 +177,7 @@ function Send-OCSPRequests
                 Write-TimeHost "Send Test request to the System ..." -ForegroundColor DarkCyan
                 $TestRequest = New-Object pki.ocsp.ocsprequest $CertPath
                 $ErrorActionPreference = "SilentlyContinue"
-                $WebResponse = Invoke-WebRequest -Method Get -Uri "https://$($TestRequest.URL.Host)"
+                $WebResponse = Invoke-WebRequest -Method Get -Uri "https://$($TestRequest.URL.Host)" -UseBasicParsing
                 $ErrorActionPreference = "Continue"
                 if($WebResponse.StatusCode -eq 200)
                 {
