@@ -1,21 +1,27 @@
 ﻿
 $DotNetInstallPS1DownloadURL = "https://dot.net/v1/dotnet-install.ps1"
+## change URL to your SCEPman
+$SCEPmanURL = "https://scepman.cldgkm.de/"
+
+## Fix Vars
+$SCEPClientURL = "https://cldlnk.de/DopvHz"
 $SCEPClientRootPath = "$env:APPDATA\GKGAB\SCEPClient"
 $DotnetInstallPS1 = -join ($SCEPClientRootPath, "\dotnet-install.ps1")
 $SCEPClientEXE = -join ($SCEPClientRootPath, "\ScepClient.exe")
 $SCEPCertsPath = -join ($SCEPClientRootPath, "\SCEPCerts")
-
-$SCEPmanURL = "https://scepman.cldgkm.de/"
-
 $MSCEPDLLURL = -join ($SCEPmanURL, "certsrv/mscep/mscep.dll")
 $DEBUGURL = -join ($SCEPmanURL, "debug")
 
-
+## prepare work
 Write-TimeHost "Test if SCEPClient root directory is available ..." -ForegroundColor Cyan -NoNewline
 if(!(Test-Path -Path $SCEPClientRootPath))
 {
     Write-TimeHost " ... SCEPClient root directory not found, create it ..." -ForegroundColor Cyan -NoNewline
     New-Item -Path $SCEPClientRootPath -ItemType Directory -Force
+
+    Write-TimeHost "... download scepclient.exe ..." -ForegroundColor Cyan
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    Invoke-RestMethod -Uri $SCEPClientURL -OutFile $SCEPClientEXE
 }
 Write-Host "... done" -ForegroundColor Green
 
